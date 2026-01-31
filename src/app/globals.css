@@ -3,6 +3,7 @@
 @theme {
   --font-sans: "Inter", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", monospace;
+  --color-brand-red: #b91c1c;
 }
 
 @layer base {
@@ -10,5 +11,6 @@
     background-color: #000000;
     color: #e4e4e7;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
