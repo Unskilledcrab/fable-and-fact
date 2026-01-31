@@ -1,14 +1,15 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Sparkles, Users, Loader2, FileSearch, ShieldAlert, Fingerprint, Edit3, Eye, EyeOff, Save, Clock, BookOpen } from 'lucide-react';
+import { Sparkles, Users, Loader2, FileSearch, ShieldAlert, Fingerprint, Clock, Eye, EyeOff, Smartphone, Share2, ArrowLeft } from 'lucide-react';
 
 export default function Home() {
   const [theme, setTheme] = useState("");
   const [players, setPlayers] = useState(6);
   const [loading, setLoading] = useState(false);
   const [mystery, setMystery] = useState<any>(null);
-  const [editMode, setEditMode] = useState<string | null>(null);
+  const [view, setView] = useState<'gm' | 'player'>('gm');
+  const [activePlayer, setActivePlayer] = useState<number | null>(null);
 
   const handleGenerate = async () => {
     setLoading(true);
@@ -48,15 +49,56 @@ export default function Home() {
     setMystery(newMystery);
   };
 
+  // --- SUB-VIEWS ---
+
+  if (mystery && view === 'player' && activePlayer !== null) {
+    const char = mystery.characters[activePlayer];
+    return (
+      <div style={{ backgroundColor: '#000', minHeight: '100vh', color: '#fff', padding: '20px', fontFamily: 'sans-serif' }}>
+        <button onClick={() => setView('gm')} style={{ background: 'transparent', border: 'none', color: '#666', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '20px' }}>
+          <ArrowLeft size={14} /> BACK TO GM DASHBOARD
+        </button>
+        
+        <div style={{ background: '#fff', color: '#000', padding: '30px', borderRadius: '4px', borderTop: '10px solid #b91c1c' }}>
+          <div style={{ fontSize: '10px', fontWeight: 'bold', color: '#b91c1c', letterSpacing: '2px', marginBottom: '10px' }}>PLAYER DOSSIER // TOP SECRET</div>
+          <h2 style={{ fontSize: '32px', fontWeight: '900', margin: 0, textTransform: 'uppercase' }}>{char.name}</h2>
+          <div style={{ fontSize: '14px', color: '#666', marginBottom: '24px' }}>{char.role}</div>
+
+          <div style={{ marginBottom: '24px', padding: '15px', background: '#f0fdf4', borderLeft: '4px solid #22c55e' }}>
+            <h4 style={{ fontSize: '10px', color: '#16a34a', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px' }}>
+              <Eye size={12} /> YOUR OBJECTIVE
+            </h4>
+            <p style={{ margin: 0, fontSize: '15px', fontWeight: 'bold' }}>{char.objective}</p>
+          </div>
+
+          <div style={{ marginBottom: '24px', padding: '15px', background: '#fff5f5', borderLeft: '4px solid #b91c1c' }}>
+            <h4 style={{ fontSize: '10px', color: '#b91c1c', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px' }}>
+              <EyeOff size={12} /> YOUR SECRET
+            </h4>
+            <p style={{ margin: 0, fontSize: '15px', fontStyle: 'italic' }}>{char.secret}</p>
+          </div>
+
+          <div style={{ fontSize: '12px', color: '#999', lineHeight: '1.4' }}>
+            <p><strong>Note:</strong> Do not show this screen to other players. You may reveal your secret through roleplay, but the physical dossier is for your eyes only.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // --- MAIN GM VIEW ---
+
   return (
     <div style={{ backgroundColor: '#000', minHeight: '100vh', color: '#fff', fontFamily: 'sans-serif', padding: '15px', paddingBottom: '100px' }}>
       <div style={{ maxWidth: '800px', margin: '0 auto' }}>
         
-        <header style={{ borderBottom: '1px solid #333', paddingBottom: '15px', marginBottom: '25px' }}>
-          <div style={{ color: '#b91c1c', fontSize: '10px', fontWeight: 'bold', letterSpacing: '2px', marginBottom: '8px' }}>INTEL OPS // V.04</div>
-          <h1 style={{ fontSize: 'clamp(28px, 7vw, 52px)', fontWeight: '900', margin: 0, fontStyle: 'italic', lineHeight: '0.9' }}>
-            FABLE <span style={{ color: '#b91c1c' }}>FACT</span>
-          </h1>
+        <header style={{ borderBottom: '1px solid #333', paddingBottom: '15px', marginBottom: '25px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+          <div>
+            <div style={{ color: '#b91c1c', fontSize: '10px', fontWeight: 'bold', letterSpacing: '2px', marginBottom: '8px' }}>INTEL OPS // V.05</div>
+            <h1 style={{ fontSize: 'clamp(28px, 7vw, 52px)', fontWeight: '900', margin: 0, fontStyle: 'italic', lineHeight: '0.9' }}>
+              FABLE <span style={{ color: '#b91c1c' }}>FACT</span>
+            </h1>
+          </div>
         </header>
 
         {!mystery ? (
@@ -84,7 +126,6 @@ export default function Home() {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '25px' }}>
             
-            {/* Main Dossier */}
             <section style={{ background: '#fff', color: '#000', padding: '20px', boxShadow: '8px 8px 0px #b91c1c' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '3px solid #000', paddingBottom: '10px', marginBottom: '20px' }}>
                 <input 
@@ -105,20 +146,10 @@ export default function Home() {
                 />
               </div>
 
-              <div style={{ marginBottom: '20px' }}>
-                <h4 style={{ fontSize: '9px', fontWeight: 'bold', color: '#b91c1c', marginBottom: '4px' }}>CORE CATALYST</h4>
-                <textarea 
-                  style={{ width: '100%', border: 'none', background: '#f0f0f0', padding: '8px', fontSize: '14px', fontWeight: 'bold', resize: 'none' }}
-                  rows={2}
-                  value={mystery.premise}
-                  onChange={(e) => updateMystery(['premise'], e.target.value)}
-                />
-              </div>
-
-              {/* 4-Hour Timeline */}
+              {/* Timeline */}
               <div style={{ marginBottom: '30px', borderTop: '2px solid #eee', paddingTop: '15px' }}>
                 <h4 style={{ fontSize: '9px', fontWeight: 'bold', color: '#000', marginBottom: '12px', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                  <Clock size={10} /> OPERATION TIMELINE (4 HOURS)
+                  <Clock size={10} /> OPERATION TIMELINE
                 </h4>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {mystery.storyline.map((step: any, i: number) => (
@@ -138,27 +169,35 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Personnel */}
+              {/* Personnel with Player View Switch */}
               <h4 style={{ fontSize: '9px', fontWeight: 'bold', color: '#000', marginBottom: '12px', letterSpacing: '1px', borderTop: '2px solid #eee', paddingTop: '15px' }}>
-                PERSONNEL DOSSIERS
+                PERSONNEL DOSSIERS (CLICK SMARTPHONE TO PREVIEW PLAYER VIEW)
               </h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                 {mystery.characters.map((char: any, i: number) => (
                   <div key={i} style={{ border: '1px solid #ddd', borderRadius: '4px', overflow: 'hidden' }}>
                     <div style={{ background: '#f5f5f5', padding: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <input 
-                        style={{ fontWeight: 'bold', background: 'transparent', border: 'none', fontSize: '14px' }}
-                        value={char.name}
-                        onChange={(e) => {
-                          const chars = [...mystery.characters];
-                          chars[i].name = e.target.value;
-                          updateMystery(['characters'], chars);
-                        }}
-                      />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <button 
+                          onClick={() => { setActivePlayer(i); setView('player'); }}
+                          style={{ background: '#000', color: '#fff', border: 'none', borderRadius: '4px', padding: '4px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                        >
+                          <Smartphone size={12} />
+                        </button>
+                        <input 
+                          style={{ fontWeight: 'bold', background: 'transparent', border: 'none', fontSize: '14px' }}
+                          value={char.name}
+                          onChange={(e) => {
+                            const chars = [...mystery.characters];
+                            chars[i].name = e.target.value;
+                            updateMystery(['characters'], chars);
+                          }}
+                        />
+                      </div>
                       <span style={{ fontSize: '9px', fontWeight: 'bold', background: '#000', color: '#fff', padding: '2px 6px', borderRadius: '2px' }}>{char.difficulty}</span>
                     </div>
                     <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                      <div style={{ marginBottom: '10px' }}>
+                      <div>
                         <div style={{ fontSize: '10px', color: '#999', marginBottom: '2px' }}>ROLE</div>
                         <input style={{ width: '100%', border: 'none', background: '#fafafa', fontSize: '12px' }} value={char.role} onChange={(e) => {
                           const chars = [...mystery.characters];
@@ -167,9 +206,9 @@ export default function Home() {
                         }} />
                       </div>
                       
-                      <div style={{ marginBottom: '10px', borderLeft: '2px solid #b91c1c', paddingLeft: '8px' }}>
+                      <div style={{ borderLeft: '2px solid #b91c1c', paddingLeft: '8px' }}>
                         <div style={{ fontSize: '10px', color: '#b91c1c', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <EyeOff size={10} /> CLASSIFIED SECRET (KEEP HIDDEN)
+                          <EyeOff size={10} /> CLASSIFIED SECRET
                         </div>
                         <textarea style={{ width: '100%', border: 'none', background: '#fff5f5', fontSize: '12px', fontStyle: 'italic', resize: 'none' }} value={char.secret} onChange={(e) => {
                           const chars = [...mystery.characters];
@@ -180,7 +219,7 @@ export default function Home() {
 
                       <div style={{ borderLeft: '2px solid #22c55e', paddingLeft: '8px' }}>
                         <div style={{ fontSize: '10px', color: '#16a34a', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <Eye size={10} /> PUBLIC OBJECTIVE (PLAYERS KNOW)
+                          <Eye size={10} /> PUBLIC OBJECTIVE
                         </div>
                         <textarea style={{ width: '100%', border: 'none', background: '#f0fdf4', fontSize: '12px', resize: 'none' }} value={char.objective} onChange={(e) => {
                           const chars = [...mystery.characters];
