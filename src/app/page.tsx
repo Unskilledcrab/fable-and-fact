@@ -8,10 +8,6 @@ function FableAndFact() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
-  // URL-driven State
-  const view = searchParams.get('view') || 'gm';
-  const activePlayerIndex = searchParams.get('p') !== null ? parseInt(searchParams.get('p')!) : null;
-
   const [theme, setTheme] = useState("");
   const [players, setPlayers] = useState(6);
   const [loading, setLoading] = useState(false);
@@ -19,7 +15,28 @@ function FableAndFact() {
   const [revealSecret, setRevealSecret] = useState(false);
   const [glitch, setGlitch] = useState(false);
 
-  // Sync state with URL
+  // Parse URL state
+  const view = searchParams.get('view') || 'gm';
+  const activePlayerIndex = searchParams.get('p') !== null ? parseInt(searchParams.get('p')!) : null;
+
+  // Persistence: Save/Load from LocalStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('current_mystery');
+    if (saved) {
+      try {
+        setMystery(JSON.parse(saved));
+      } catch (e) {
+        console.error("Failed to restore session", e);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (mystery) {
+      localStorage.setItem('current_mystery', JSON.stringify(mystery));
+    }
+  }, [mystery]);
+
   const setURLState = (newView: string, pIdx: number | null = null) => {
     const params = new URLSearchParams();
     params.set('view', newView);
@@ -29,7 +46,7 @@ function FableAndFact() {
 
   useEffect(() => {
     setGlitch(true);
-    const timer = setTimeout(() => setGlitch(false), 200);
+    const timer = setTimeout(() => setGlitch(false), 150);
     return () => clearTimeout(timer);
   }, [view, activePlayerIndex]);
 
@@ -37,7 +54,7 @@ function FableAndFact() {
     setLoading(true);
     try {
       await new Promise(r => setTimeout(r, 1200));
-      setMystery({
+      const newMystery = {
         title: "THE LAST LEDGER OF LOXLEY",
         setting: "An opulent Art Deco ballroom, 1929. The air is thick with expensive cigars and cheap perfume.",
         premise: "The city's most influential banker has collapsed mid-toast. His ledger, containing everyone's secrets, has vanished.",
@@ -51,7 +68,9 @@ function FableAndFact() {
           { id: "1", name: "Arthur 'The Ox' Miller", role: "The Bodyguard", faction: "THE SYNDICATE", difficulty: "Medium", secret: "Is actually a mole for the Moretti Crime Family.", objective: "Ensure the ledger never sees the light of day.", allies: ["Vivian Vane"] },
           { id: "2", name: "Detective Sharp", role: "The Guest of Honor", faction: "LAW & ORDER", difficulty: "Hard", secret: "Owes the banker a gambling debt that would ruin his career.", objective: "Pin the crime on a convenient scapegoat.", allies: [] }
         ]
-      });
+      };
+      setMystery(newMystery);
+      localStorage.setItem('current_mystery', JSON.stringify(newMystery));
     } catch (error) {
       console.error(error);
     } finally {
@@ -59,59 +78,45 @@ function FableAndFact() {
     }
   };
 
+  // --- STYLES (Inline to guarantee look) ---
+  const containerStyle: React.CSSProperties = { backgroundColor: '#000', minHeight: '100vh', color: '#fff', padding: '20px', fontFamily: 'sans-serif', opacity: glitch ? 0.4 : 1, transition: 'opacity 0.15s ease' };
+  const cardStyle: React.CSSProperties = { background: '#fff', color: '#000', padding: '24px', boxShadow: '10px 10px 0px #b91c1c', borderRadius: '2px' };
+  const inputStyle: React.CSSProperties = { width: '100%', background: '#000', border: '1px solid #333', padding: '15px', color: '#fff', fontSize: '16px', borderRadius: '4px' };
+  const buttonStyle: React.CSSProperties = { width: '100%', padding: '18px', background: '#b91c1c', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: '900', letterSpacing: '1px', cursor: 'pointer' };
+
   // --- PLAYER VIEW ---
   if (mystery && view === 'player' && activePlayerIndex !== null) {
     const char = mystery.characters[activePlayerIndex];
     return (
-      <div className={`min-h-screen bg-black text-white p-5 font-mono transition-opacity duration-150 ${glitch ? 'opacity-30' : 'opacity-100'}`}>
-        <button onClick={() => { setURLState('gm'); setRevealSecret(false); }} className="bg-transparent border-none color-red-600 text-[10px] font-bold flex items-center gap-2 mb-6 tracking-widest uppercase cursor-pointer">
-          <ArrowLeft size={14} /> EXIT_TERMINAL
+      <div style={{ ...containerStyle, fontFamily: 'monospace' }}>
+        <button onClick={() => { setURLState('gm'); setRevealSecret(false); }} style={{ background: 'transparent', border: 'none', color: '#b91c1c', fontSize: '11px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '30px', cursor: 'pointer' }}>
+          <ArrowLeft size={16} /> EXIT_ENCRYPTED_SESSION
         </button>
         
-        <div className="bg-[#0a0a0a] p-6 border border-[#222] border-l-4 border-l-[#b91c1c] rounded-sm">
-          <div className="text-[9px] font-bold text-[#b91c1c] tracking-[0.3em] mb-5">// DOSSIER ID: {activePlayerIndex.toString().padStart(3, '0')}</div>
+        <div style={{ background: '#0a0a0a', padding: '24px', border: '1px solid #222', borderLeft: '5px solid #b91c1c' }}>
+          <div style={{ fontSize: '9px', fontWeight: 'bold', color: '#b91c1c', letterSpacing: '3px', marginBottom: '20px' }}>// SUBJECT_{activePlayerIndex.toString().padStart(3, '0')}</div>
           
-          <h2 className="text-3xl font-black m-0 uppercase leading-tight text-[#eee]">{char.name}</h2>
-          <div className="text-[11px] text-[#666] mt-1 mb-8 tracking-widest uppercase font-bold">{char.role} // {char.faction}</div>
+          <h2 style={{ fontSize: '28px', fontWeight: '900', margin: 0, textTransform: 'uppercase' }}>{char.name}</h2>
+          <div style={{ fontSize: '11px', color: '#666', marginTop: '4px', marginBottom: '30px' }}>{char.role} // {char.faction}</div>
 
-          <div className="mb-8 p-4 bg-[#111] border border-[#1a1a1a]">
-            <h4 className="text-[9px] text-[#666] font-bold flex items-center gap-2 mb-3 uppercase tracking-wider">
-              <Shield size={12} className="text-[#b91c1c]" /> KNOWN AFFILIATES
-            </h4>
-            {char.allies?.length > 0 ? (
-              <ul className="m-0 p-0 list-none">
-                {char.allies.map((ally: string, i: number) => (
-                  <li key={i} className="text-[13px] text-[#888] mb-1.5 flex items-center gap-2"><span className="text-[#b91c1c] opacity-50">&gt;</span> {ally}</li>
-                ))}
-              </ul>
-            ) : <p className="m-0 text-[11px] text-[#444] italic">Isolated operative.</p>}
+          <div style={{ marginBottom: '30px', padding: '15px', background: '#111', border: '1px solid #1a1a1a' }}>
+            <div style={{ fontSize: '10px', color: '#666', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}><Shield size={12} color="#b91c1c" /> AFFILIATES</div>
+            {char.allies?.map((a:any, i:any)=>(<div key={i} style={{fontSize:'13px', color:'#888', marginBottom:'5px'}}>&gt; {a}</div>))}
           </div>
 
-          <div className="mb-8">
-            <h4 className="text-[9px] text-[#16a34a] font-bold flex items-center gap-2 mb-2 uppercase tracking-wider">
-              <Unlock size={12} /> MISSION OBJECTIVE
-            </h4>
-            <p className="m-0 text-[14px] leading-relaxed text-[#bbb]">{char.objective}</p>
+          <div style={{ marginBottom: '30px' }}>
+            <div style={{ fontSize: '10px', color: '#16a34a', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}><Unlock size={12} /> OBJECTIVE</div>
+            <p style={{ margin: 0, fontSize: '14px', lineHeight: '1.5', color: '#ccc' }}>{char.objective}</p>
           </div>
 
-          <div className={`p-5 rounded-sm transition-all duration-300 border ${revealSecret ? 'bg-[#1a0505] border-[#b91c1c]' : 'bg-[#0f0f0f] border-[#1a1a1a]'}`}>
-            <h4 className="text-[9px] text-[#b91c1c] font-bold flex items-center gap-2 mb-4 uppercase tracking-widest">
-              <Lock size={12} /> CLASSIFIED DATA
-            </h4>
-            
+          <div style={{ padding: '20px', background: revealSecret ? '#1a0505' : '#0f0f0f', border: `1px solid ${revealSecret ? '#b91c1c' : '#222'}`, transition: 'all 0.3s' }}>
+            <div style={{ fontSize: '10px', color: '#b91c1c', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '15px' }}><Lock size={12} /> SECRET</div>
             {!revealSecret ? (
-              <button 
-                onClick={() => setRevealSecret(true)}
-                className="w-full py-4 bg-[#b91c1c] hover:bg-[#991b1b] text-white border-none text-[11px] font-black tracking-[0.2em] uppercase cursor-pointer active:scale-[0.98] transition-transform"
-              >
-                UNSEAL ENVELOPE
-              </button>
+              <button onClick={() => setRevealSecret(true)} style={{ ...buttonStyle, padding: '12px' }}>UNSEAL DATA</button>
             ) : (
-              <div onClick={() => setRevealSecret(false)} className="cursor-pointer">
-                <p className="m-0 text-[15px] italic leading-relaxed text-[#ffbaba]">
-                  {char.secret}
-                </p>
-                <div className="mt-5 text-[8px] text-[#633] text-center tracking-[0.3em] font-black uppercase underline decoration-dotted">RESUBMIT TO LOCK</div>
+              <div onClick={() => setRevealSecret(false)} style={{ cursor: 'pointer' }}>
+                <p style={{ margin: 0, fontSize: '15px', fontStyle: 'italic', color: '#ffbaba' }}>{char.secret}</p>
+                <div style={{ marginTop: '20px', fontSize: '9px', color: '#633', textAlign: 'center' }}>[ TAP TO LOCK ]</div>
               </div>
             )}
           </div>
@@ -122,70 +127,52 @@ function FableAndFact() {
 
   // --- GM VIEW ---
   return (
-    <div className={`min-h-screen bg-black text-[#ccc] p-4 pb-24 transition-opacity duration-150 ${glitch ? 'opacity-30' : 'opacity-100'}`} style={{ fontFamily: 'sans-serif' }}>
-      <div className="max-w-[800px] mx-auto">
-        <header className="border-b border-[#222] pb-4 mb-6">
-          <div className="text-[#b91c1c] text-[10px] font-bold tracking-[0.2em] mb-2 uppercase">INTEL OPS // V.07</div>
-          <h1 className="text-[clamp(32px,10vw,60px)] font-black m-0 italic tracking-tighter text-white">
-            FABLE <span className="text-[#b91c1c]">FACT</span>
+    <div style={containerStyle}>
+      <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+        <header style={{ borderBottom: '1px solid #333', paddingBottom: '15px', marginBottom: '30px' }}>
+          <div style={{ color: '#b91c1c', fontSize: '10px', fontWeight: 'bold', letterSpacing: '2px', marginBottom: '10px' }}>INTEL OPS // V.08</div>
+          <h1 style={{ fontSize: '48px', fontWeight: '900', margin: 0, fontStyle: 'italic', lineHeight: '0.8', color: '#fff' }}>
+            FABLE <span style={{ color: '#b91c1c' }}>FACT</span>
           </h1>
         </header>
 
         {!mystery ? (
-          <aside className="bg-[#0a0a0a] p-5 border border-[#222] rounded-md shadow-2xl">
-            <div className="mb-6">
-              <label className="block text-[9px] text-[#666] font-bold tracking-widest uppercase mb-2">SCENARIO MOTIF</label>
-              <input 
-                className="w-full bg-black border border-[#333] p-4 text-white rounded-sm text-base focus:border-[#b91c1c] outline-none"
-                placeholder="Enter theme..."
-                value={theme}
-                onChange={(e) => setTheme(e.target.value)}
-              />
+          <div style={{ background: '#111', padding: '20px', border: '1px solid #222', borderRadius: '4px' }}>
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', fontSize: '10px', color: '#666', marginBottom: '8px', letterSpacing: '1px' }}>SCENARIO MOTIF</label>
+              <input style={inputStyle} placeholder="Enter theme..." value={theme} onChange={(e) => setTheme(e.target.value)} />
             </div>
-            <div className="mb-8">
-               <label className="flex justify-between text-[9px] text-[#666] font-bold uppercase mb-2 tracking-widest">
+            <div style={{ marginBottom: '30px' }}>
+               <label style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#666', marginBottom: '8px' }}>
                 <span>OPERATIVES</span>
-                <span className="text-[#b91c1c] text-sm">{players}</span>
+                <span style={{ color: '#b91c1c', fontWeight: 'bold' }}>{players}</span>
               </label>
-              <input type="range" min="3" max="12" className="w-full accent-[#b91c1c] h-8" value={players} onChange={(e) => setPlayers(parseInt(e.target.value))} />
+              <input type="range" min="3" max="12" style={{ width: '100%', accentColor: '#b91c1c', height: '40px' }} value={players} onChange={(e) => setPlayers(parseInt(e.target.value))} />
             </div>
-            <button onClick={handleGenerate} disabled={loading || !theme} className="w-full py-5 bg-[#b91c1c] hover:bg-[#991b1b] text-white border-none font-black tracking-widest text-xs rounded-sm cursor-pointer disabled:bg-[#333] transition-colors">
-              {loading ? 'PROCESSING...' : 'INITIALIZE GENERATION'}
+            <button onClick={handleGenerate} disabled={loading || !theme} style={buttonStyle}>
+              {loading ? 'COMPILING...' : 'INITIALIZE GENERATION'}
             </button>
-          </aside>
+          </div>
         ) : (
-          <div className="flex flex-col gap-6">
-            <section className="bg-white text-black p-6 shadow-[10px_10px_0px_#b91c1c] border border-white">
-               <h2 className="text-2xl font-black uppercase mb-6 border-b-4 border-black pb-2 flex justify-between items-center">
-                 {mystery.title}
-                 <Fingerprint size={24} className="opacity-20" />
-               </h2>
-               
-               <div className="mb-8">
-                 <h4 className="text-[9px] font-black text-[#b91c1c] tracking-[0.2em] uppercase mb-4 underline">Personnel Manifest</h4>
-                 <div className="flex flex-col gap-4">
-                   {mystery.characters.map((char: any, i: number) => (
-                     <div key={i} className="border border-[#eee] rounded-sm bg-[#fafafa] flex items-center justify-between p-3">
-                        <div className="flex flex-col">
-                          <span className="text-sm font-black">{char.name}</span>
-                          <span className="text-[10px] text-[#999] uppercase font-bold">{char.role}</span>
-                        </div>
-                        <button 
-                          onClick={() => setURLState('player', i)}
-                          className="bg-black text-white border-none p-3 rounded-sm flex items-center justify-center cursor-pointer active:scale-90 transition-transform"
-                          title="Preview Player Dossier"
-                        >
-                          <Smartphone size={16} />
-                        </button>
-                     </div>
-                   ))}
-                 </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+            <div style={cardStyle}>
+               <h2 style={{ fontSize: '24px', fontWeight: '900', margin: '0 0 20px 0', borderBottom: '4px solid #000', paddingBottom: '10px', textTransform: 'uppercase' }}>{mystery.title}</h2>
+               <div style={{ fontSize: '10px', fontWeight: '900', color: '#b91c1c', marginBottom: '15px', letterSpacing: '1px' }}>PERSONNEL_MANIFEST</div>
+               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                 {mystery.characters.map((char: any, i: number) => (
+                   <div key={i} style={{ background: '#f5f5f5', border: '1px solid #eee', padding: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span style={{ fontSize: '14px', fontWeight: '900' }}>{char.name}</span>
+                        <span style={{ fontSize: '10px', color: '#999', textTransform: 'uppercase' }}>{char.role}</span>
+                      </div>
+                      <button onClick={() => setURLState('player', i)} style={{ background: '#000', color: '#fff', border: 'none', padding: '12px', borderRadius: '4px', cursor: 'pointer' }}>
+                        <Smartphone size={18} />
+                      </button>
+                   </div>
+                 ))}
                </div>
-               
-               <button onClick={() => setMystery(null)} className="w-full py-3 bg-black text-white text-[10px] font-black tracking-widest uppercase border-none cursor-pointer">
-                 SCRAP DATA & RESTART
-               </button>
-            </section>
+               <button onClick={() => { localStorage.removeItem('current_mystery'); setMystery(null); }} style={{ marginTop: '30px', width: '100%', padding: '12px', background: '#000', color: '#fff', border: 'none', fontSize: '10px', fontWeight: '900', cursor: 'pointer' }}>SCRAP DATA & RESTART</button>
+            </div>
           </div>
         )}
       </div>
@@ -195,7 +182,7 @@ function FableAndFact() {
 
 export default function Home() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center text-white font-mono uppercase tracking-[0.5em] animate-pulse text-[10px]">Compiling_Intelligence...</div>}>
+    <Suspense fallback={<div style={{ minHeight: '100vh', background: '#000', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'monospace' }}>BOOT_SEQUENCE...</div>}>
       <FableAndFact />
     </Suspense>
   );
