@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Sparkles, Users, Loader2, ScrollText, MapPin, Ghost, AlertCircle, FileSearch, ShieldAlert, Fingerprint } from 'lucide-react';
+import { Sparkles, Users, Loader2, FileSearch, ShieldAlert, Fingerprint } from 'lucide-react';
 
 export default function Home() {
   const [theme, setTheme] = useState("");
@@ -31,137 +31,92 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-black text-zinc-400 font-sans selection:bg-red-900 selection:text-white pb-20 overflow-x-hidden">
-      {/* Background Textures */}
-      <div className="fixed inset-0 pointer-events-none opacity-10 mix-blend-overlay">
-        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/pinstripe.png')] opacity-20" />
-      </div>
-      
-      {/* Dynamic Lighting */}
-      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-5xl h-screen pointer-events-none overflow-hidden">
-        <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-red-900/10 blur-[150px] rounded-full" />
-        <div className="absolute top-[40%] right-[-10%] w-[50%] h-[50%] bg-zinc-800/10 blur-[150px] rounded-full" />
-      </div>
-
-      <div className="relative z-10 max-w-4xl mx-auto px-6 pt-16">
-        <header className="mb-16 border-b border-zinc-900 pb-8 flex justify-between items-end">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="h-1 w-8 bg-red-700" />
-              <span className="text-[10px] font-mono tracking-[0.3em] text-red-600 uppercase">Classified Access</span>
-            </div>
-            <h1 className="text-7xl font-black tracking-tighter text-zinc-100 uppercase italic leading-none">
-              Fable <span className="text-red-700">Fact</span>
-            </h1>
-          </div>
-          <div className="hidden md:block text-right">
-            <p className="text-[10px] font-mono text-zinc-600 uppercase tracking-widest mb-1 leading-tight">
-              // Archive: Dynamic Plots<br />
-              // Index: 0x921A-MMV
-            </p>
-            <div className="flex gap-1 justify-end opacity-20">
-              {[...Array(8)].map((_, i) => <div key={i} className="h-4 w-1 bg-zinc-400" />)}
-            </div>
-          </div>
+    <div style={{ backgroundColor: '#000', minHeight: '100vh', color: '#fff', fontFamily: 'sans-serif', padding: '40px' }}>
+      <div style={{ maxWidth: '900px', margin: '0 auto' }}>
+        
+        <header style={{ borderBottom: '1px solid #333', paddingBottom: '20px', marginBottom: '40px' }}>
+          <div style={{ color: '#b91c1c', fontSize: '12px', fontWeight: 'bold', letterSpacing: '2px', marginBottom: '10px' }}>CLASSIFIED ACCESS</div>
+          <h1 style={{ fontSize: '64px', fontWeight: '900', margin: 0, fontStyle: 'italic' }}>
+            FABLE <span style={{ color: '#b91c1c' }}>FACT</span>
+          </h1>
         </header>
 
-        <section className="grid md:grid-cols-12 gap-12 mb-16">
-          <div className="md:col-span-5 space-y-6">
-            <div className="p-6 bg-zinc-900/40 border border-zinc-800/50 rounded-lg backdrop-blur-md">
-               <h3 className="text-[10px] font-mono text-red-700 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-                 <ShieldAlert size={12} /> Parameters Required
-               </h3>
-               
-               <div className="space-y-6">
-                 <div>
-                   <label className="block text-[10px] font-mono text-zinc-500 uppercase mb-2">Theme Motif</label>
-                   <input 
-                     type="text"
-                     placeholder="Noir Jazz Club..."
-                     className="w-full bg-black border border-zinc-800 p-3 text-sm text-zinc-100 placeholder:text-zinc-800 focus:border-red-900 outline-none transition-all rounded"
-                     value={theme}
-                     onChange={(e) => setTheme(e.target.value)}
-                   />
-                 </div>
-
-                 <div>
-                    <label className="flex justify-between text-[10px] font-mono text-zinc-500 uppercase mb-2">
-                      <span>Operatives</span>
-                      <span className="text-zinc-100 font-bold">{players}</span>
-                    </label>
-                    <input 
-                      type="range"
-                      min="3"
-                      max="12"
-                      className="w-full h-1 bg-zinc-800 appearance-none cursor-pointer accent-red-700 rounded-lg"
-                      value={players}
-                      onChange={(e) => setPlayers(parseInt(e.target.value))}
-                    />
-                 </div>
-
-                 <button 
-                   onClick={handleGenerate}
-                   disabled={loading || !theme}
-                   className="w-full py-4 bg-zinc-100 hover:bg-white disabled:bg-zinc-800 text-black font-black uppercase tracking-widest text-xs transition-all flex items-center justify-center gap-2 group"
-                 >
-                   {loading ? <Loader2 className="animate-spin" size={16} /> : (
-                     <>
-                      <Sparkles size={14} className="group-hover:text-red-700 transition-colors" />
-                      Initiate Generation
-                     </>
-                   )}
-                 </button>
-               </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '40px' }}>
+          
+          <aside style={{ background: '#111', padding: '24px', borderRadius: '8px', border: '1px solid #222' }}>
+            <h3 style={{ fontSize: '10px', color: '#666', marginBottom: '20px', letterSpacing: '1px' }}>SYSTEM PARAMETERS</h3>
+            
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', fontSize: '11px', color: '#999', marginBottom: '8px' }}>THEME MOTIF</label>
+              <input 
+                style={{ width: '100%', background: '#000', border: '1px solid #333', padding: '12px', color: '#fff', borderRadius: '4px' }}
+                placeholder="e.g. Noir Jazz Club"
+                value={theme}
+                onChange={(e) => setTheme(e.target.value)}
+              />
             </div>
-          </div>
 
-          <div className="md:col-span-7">
+            <div style={{ marginBottom: '30px' }}>
+              <label style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#999', marginBottom: '8px' }}>
+                <span>OPERATIVES</span>
+                <span style={{ color: '#b91c1c' }}>{players}</span>
+              </label>
+              <input 
+                type="range" min="3" max="12"
+                style={{ width: '100%', accentColor: '#b91c1c' }}
+                value={players}
+                onChange={(e) => setPlayers(parseInt(e.target.value))}
+              />
+            </div>
+
+            <button 
+              onClick={handleGenerate}
+              disabled={loading || !theme}
+              style={{ 
+                width: '100%', padding: '16px', background: loading ? '#333' : '#b91c1c', 
+                color: '#fff', border: 'none', borderRadius: '4px', fontWeight: 'bold', 
+                cursor: 'pointer', letterSpacing: '1px' 
+              }}
+            >
+              {loading ? 'GENERATING...' : 'INITIATE GENERATION'}
+            </button>
+          </aside>
+
+          <section>
             {!mystery ? (
-              <div className="h-full flex flex-col items-center justify-center border-2 border-dashed border-zinc-900 rounded-lg p-12 text-center group">
-                <FileSearch size={48} className="text-zinc-800 mb-4 group-hover:text-zinc-700 transition-colors" />
-                <p className="text-xs font-mono text-zinc-700 uppercase tracking-widest max-w-[200px]">
-                  Input parameters to compile intelligence report.
-                </p>
+              <div style={{ height: '300px', border: '2px dashed #222', borderRadius: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#444' }}>
+                <FileSearch size={48} style={{ marginBottom: '16px' }} />
+                <div style={{ fontSize: '12px', letterSpacing: '1px' }}>AWAITING INPUT...</div>
               </div>
             ) : (
-              <div className="animate-in fade-in slide-in-from-right-8 duration-700">
-                <div className="bg-zinc-100 text-black p-8 shadow-[20px_20px_0px_rgba(185,28,28,0.2)]">
-                  <div className="flex justify-between items-start mb-8">
-                    <h2 className="text-4xl font-black uppercase leading-none border-b-4 border-black pb-2">{mystery.title}</h2>
-                    <Fingerprint size={40} className="opacity-10" />
-                  </div>
-                  
-                  <div className="space-y-6">
-                    <div>
-                      <h4 className="text-[10px] font-mono uppercase font-bold text-red-700 mb-1 tracking-tighter">Locality Data</h4>
-                      <p className="text-sm font-serif italic leading-relaxed">{mystery.setting}</p>
-                    </div>
+              <div style={{ background: '#fff', color: '#000', padding: '40px', boxShadow: '10px 10px 0px #b91c1c' }}>
+                <h2 style={{ fontSize: '32px', fontWeight: '900', borderBottom: '3px solid #000', paddingBottom: '10px', marginBottom: '24px' }}>{mystery.title}</h2>
+                
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ fontSize: '10px', fontWeight: 'bold', color: '#b91c1c' }}>LOCALITY</div>
+                  <p style={{ margin: '4px 0', fontStyle: 'italic' }}>{mystery.setting}</p>
+                </div>
 
-                    <div>
-                      <h4 className="text-[10px] font-mono uppercase font-bold text-red-700 mb-1 tracking-tighter">Event Catalyst</h4>
-                      <p className="text-sm font-semibold">{mystery.premise}</p>
-                    </div>
+                <div style={{ marginBottom: '30px' }}>
+                  <div style={{ fontSize: '10px', fontWeight: 'bold', color: '#b91c1c' }}>CATALYST</div>
+                  <p style={{ margin: '4px 0', fontWeight: 'bold' }}>{mystery.premise}</p>
+                </div>
 
-                    <div className="pt-4 border-t border-black/10">
-                      <h4 className="text-[10px] font-mono uppercase font-bold text-black mb-4 tracking-widest flex items-center gap-2">
-                         Identified Personnel
-                      </h4>
-                      <div className="grid grid-cols-1 gap-2">
-                        {mystery.characters.map((char: any, i: number) => (
-                          <div key={i} className="flex items-center justify-between text-xs border-b border-black/5 py-1">
-                            <span className="font-bold">{char.name}</span>
-                            <span className="text-[10px] font-mono opacity-60">[{char.role}]</span>
-                          </div>
-                        ))}
-                      </div>
+                <div>
+                  <div style={{ fontSize: '10px', fontWeight: 'bold', marginBottom: '10px' }}>IDENTIFIED PERSONNEL</div>
+                  {mystery.characters.map((char: any, i: number) => (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', borderBottom: '1px solid #eee', padding: '8px 0' }}>
+                      <span style={{ fontWeight: 'bold' }}>{char.name}</span>
+                      <span style={{ color: '#666' }}>[{char.role}]</span>
                     </div>
-                  </div>
+                  ))}
                 </div>
               </div>
             )}
-          </div>
-        </section>
+          </section>
+
+        </div>
       </div>
-    </main>
+    </div>
   );
 }
