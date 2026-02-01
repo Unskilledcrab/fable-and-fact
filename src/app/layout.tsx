@@ -1,5 +1,6 @@
 import './globals.css';
 import React from 'react';
+import { StateProvider } from '../lib/state';
 
 export default function RootLayout({
   children,
@@ -8,7 +9,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body style={{ margin: 0, backgroundColor: '#000' }}>
+        <StateProvider>
+          {children}
+        </StateProvider>
+      </body>
     </html>
   );
 }
