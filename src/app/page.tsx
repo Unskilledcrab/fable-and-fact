@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, Suspense, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Sparkles, Users, Loader2, Fingerprint, BookOpen, UserCheck, Unlock, Lock, ArrowLeft, Smartphone, ChevronRight, Clock, MapPin } from 'lucide-react';
 import { useAppState } from '../lib/state';
@@ -28,12 +28,19 @@ function FableAndFact() {
   const [revealSecret, setRevealSecret] = useState(false);
   const [glitch, setGlitch] = useState(false);
 
-  const setURLState = (newView: string, pIdx: number | null = null) => {
-    const params = new URLSearchParams();
+  // Use replace instead of push to prevent history stack loops
+  // Wrap in useCallback to prevent re-renders
+  const setURLState = useCallback((newView: string, pIdx: number | null = null) => {
+    const params = new URLSearchParams(window.location.search);
     params.set('view', newView);
-    if (pIdx !== null) params.set('p', pIdx.toString());
-    router.replace(`?${params.toString()}`);
-  };
+    if (pIdx !== null) {
+      params.set('p', pIdx.toString());
+    } else {
+      params.delete('p');
+    }
+    const newUrl = `${window.location.pathname}?${params.toString()}`;
+    router.replace(newUrl, { scroll: false });
+  }, [router]);
 
   useEffect(() => {
     setGlitch(true);
@@ -42,6 +49,7 @@ function FableAndFact() {
   }, [view, activePlayerIndex]);
 
   const handleGenerate = async () => {
+    if (loading) return;
     setLoading(true);
     try {
       await new Promise(r => setTimeout(r, 1800));
@@ -99,13 +107,23 @@ function FableAndFact() {
     } catch (error) { console.error(error); } finally { setLoading(false); }
   };
 
+  // Prevent "jumps" by waiting for hydration to be handled in the StateProvider or here
+  // Note: We return null in StateProvider while initializing, but let's be double sure.
+
   // --- PLAYER VIEW ---
   if (state.currentMystery && view === 'player' && activePlayerIndex !== null) {
     const char = state.currentMystery.characters[activePlayerIndex];
     if (!char) return <div style={{ color: '#fff', padding: '20px' }}>SUBJECT_RECORDS_NOT_FOUND</div>;
     return (
       <div style={{ backgroundColor: COLORS.bg, minHeight: '100vh', color: COLORS.text, padding: '20px', fontFamily: 'monospace', opacity: glitch ? 0.4 : 1, transition: 'opacity 0.15s ease' }}>
-        <button onClick={() => { setURLState('gm'); setRevealSecret(false); }} style={{ background: 'none', border: 'none', color: COLORS.muted, fontSize: '11px', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '32px', cursor: 'pointer', padding: 0 }}>
+        <button 
+          onClick={(e) => { 
+            e.preventDefault();
+            setURLState('gm'); 
+            setRevealSecret(false); 
+          }} 
+          style={{ background: 'none', border: 'none', color: COLORS.muted, fontSize: '11px', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '32px', cursor: 'pointer', padding: 0 }}
+        >
           <ArrowLeft size={16} /> DISCONNECT_TERMINAL
         </button>
 
@@ -140,15 +158,15 @@ function FableAndFact() {
           <div style={{ marginTop: '12px' }}>
             {!revealSecret ? (
               <button 
-                onClick={() => setRevealSecret(true)}
-                style={{ width: '100%', padding: '24px', borderRadius: '8px', background: COLORS.text, color: COLORS.bg, border: 'none', fontWeight:900, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', letterSpacing: '0.1em' }}
+                onClick={(e) => { e.preventDefault(); setRevealSecret(true); }}
+                style={{ width: '100%', padding: '24px', borderRadius: '8px', background: COLORS.text, color: COLORS.bg, border: 'none', fontWeight: 900, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', letterSpacing: '0.1em' }}
               >
                 <Lock size={18} /> UNSEAL SECURE DATA
               </button>
             ) : (
               <div 
-                onClick={() => setRevealSecret(false)}
-                style={{ background: '#310a0a', padding: '24px', borderRadius: '8px', border: `1px solid ${COLORS.accent}`, cursor: 'pointer' }}
+                onClick={(e) => { e.preventDefault(); setRevealSecret(false); }}
+                style={{ background: '#310a0a', padding: '24px', borderRadius: '8px', border: `1px solid ${COLORS.accent}`, cursor: 'pointer', boxShadow: `0 0 20px ${COLORS.glow}` }}
               >
                 <div style={{ fontSize: '10px', color: COLORS.accent, fontWeight: '800', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>CLASSIFIED_ENVELOPE</div>
                 <p style={{ margin: 0, fontSize: '16px', lineHeight: '1.6', color: '#fecdd3', fontStyle: 'italic' }}>{char.secret}</p>
@@ -171,7 +189,7 @@ function FableAndFact() {
               FABLE<span style={{ color: COLORS.accent }}>FACT</span>
             </h1>
             <div style={{ fontSize: '10px', color: COLORS.muted, fontWeight: '500', textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: '4px' }}>
-              Intelligence Orchestrator // v1.2
+              Intelligence Orchestrator // v1.3
             </div>
           </div>
           <Fingerprint size={20} color={COLORS.accent} />
@@ -190,7 +208,7 @@ function FableAndFact() {
             </div>
             
             <button 
-              onClick={handleGenerate}
+              onClick={(e) => { e.preventDefault(); handleGenerate(); }}
               disabled={loading || !state.theme}
               style={{ width: '100%', padding: '20px', background: COLORS.accent, color: '#fff', border: 'none', borderRadius: '12px', fontWeight: '800', fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: 'all 0.2s' }}
             >
@@ -224,7 +242,7 @@ function FableAndFact() {
                 {state.currentMystery.characters.map((char: any, i: number) => (
                   <div 
                     key={i} 
-                    onClick={() => setURLState('player', i)}
+                    onClick={(e) => { e.preventDefault(); setURLState('player', i); }}
                     style={{ background: COLORS.bg, border: `1px solid ${COLORS.border}`, padding: '16px', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
                   >
                     <div>
@@ -237,7 +255,7 @@ function FableAndFact() {
               </div>
 
               <button 
-                onClick={() => { localStorage.removeItem('fable_and_fact_state'); setMystery(null); }}
+                onClick={(e) => { e.preventDefault(); localStorage.removeItem('fable_and_fact_state'); window.location.reload(); }}
                 style={{ marginTop: '32px', width: '100%', padding: '16px', background: 'transparent', color: '#633', border: `1px solid #311`, borderRadius: '12px', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', cursor: 'pointer' }}
               >
                 Purge Database & Restart
