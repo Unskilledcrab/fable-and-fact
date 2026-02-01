@@ -2,7 +2,18 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Sparkles, Users, Loader2, Fingerprint, Clock, Shield, Unlock, Lock, ArrowLeft, Smartphone, BookOpen, UserCheck, AlertCircle } from 'lucide-react';
+import { Sparkles, Users, Loader2, Fingerprint, Clock, Shield, Unlock, Lock, ArrowLeft, Smartphone, BookOpen, UserCheck, AlertCircle, Menu, X, ChevronRight } from 'lucide-react';
+
+// --- STYLES CONSTANTS ---
+const COLORS = {
+  bg: '#09090b',
+  card: '#18181b',
+  accent: '#e11d48', // Rose 600
+  text: '#fafafa',
+  muted: '#71717a',
+  border: '#27272a',
+  success: '#10b981'
+};
 
 function FableAndFact() {
   const router = useRouter();
@@ -17,7 +28,6 @@ function FableAndFact() {
   const [theme, setTheme] = useState("");
   const [players, setPlayers] = useState(6);
   const [revealSecret, setRevealSecret] = useState(false);
-  const [glitch, setGlitch] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem('current_mystery');
@@ -38,91 +48,95 @@ function FableAndFact() {
     router.replace(`?${params.toString()}`);
   };
 
-  useEffect(() => {
-    setGlitch(true);
-    const timer = setTimeout(() => setGlitch(false), 150);
-    return () => clearTimeout(timer);
-  }, [view, activePlayerIndex]);
-
   const handleGenerate = async () => {
     setLoading(true);
     try {
       await new Promise(r => setTimeout(r, 1200));
-      const newMystery = {
+      setMystery({
         title: "THE LAST LEDGER OF LOXLEY",
-        setting: "An opulent Art Deco ballroom, 1929.",
-        publicLore: "The city's elite have gathered to celebrate the 50th anniversary of Loxley Bank. Rumors of a merger have been swirling in the press all week. Everyone knows the vault contains the 'Founders' Ledger,' a book said to hold the true history of every fortune in the city.",
-        premise: "Mid-toast, the lights cut out. A scream, a crash, and when the backup generators kick in, Lord Loxley is on the floor and the vault is wide open.",
-        storyline: [
-          { time: "8:00 PM", event: "Arrival & Cocktails. Guests are encouraged to find their initial allies." },
-          { time: "11:30 PM", event: "The Confrontation. All guests gather for the final reveal." }
-        ],
+        setting: "An opulent Art Deco ballroom, 1929. Gold leaf accents catch the flickering candlelight as a storm rages outside.",
+        publicLore: "The city's elite celebrate Loxley Bank's 50th anniversary. Everyone whispers about the 'Founders' Ledger,' a book containing every fortune's dirty secret.",
+        premise: "The lights cut out during the toast. A crash sounds. When they return, Lord Loxley is dead and the vault stands empty.",
         characters: [
-          { 
-            name: "Vivian Vane", role: "The Lounge Singer", faction: "THE SYNDICATE", difficulty: "Easy",
-            personalLore: "While performing, you noticed Lord Loxley slip a small brass key into his vest pocket—a key that doesn't belong to the vault.",
-            secret: "You are actually the daughter of the man Loxley swindled to build this bank.", 
-            objective: "Retrieve the brass key and find what it opens.", 
-            allies: ["Arthur Miller"] 
-          },
-          { 
-            name: "Detective Sharp", role: "The Guest", faction: "LAW", difficulty: "Hard",
-            personalLore: "Your informant told you that the 'Lights Out' wasn't a glitch—it was triggered from the servant's quarters.",
-            secret: "You are being paid by a rival bank to ensure the Ledger disappears tonight.", 
-            objective: "Intercept whoever has the Ledger before they reach the exit.", 
-            allies: [] 
-          }
+          { name: "Vivian Vane", role: "Lounge Singer", faction: "THE SYNDICATE", difficulty: "Easy", personalLore: "You saw Loxley hide a small brass key in his vest pocket before the lights went out.", secret: "You are the daughter of the man Loxley betrayed to build this empire.", objective: "Find that brass key and what it unlocks.", allies: ["Arthur Miller"] },
+          { name: "Detective Sharp", role: "The Guest", faction: "LAW", difficulty: "Hard", personalLore: "Your contact told you the power cut was manual, triggered from the servant's hall.", secret: "A rival bank paid you to make sure the Ledger never leaves this house tonight.", objective: "Intercept the thief before they reach the gate.", allies: [] }
         ]
-      };
-      setMystery(newMystery);
+      });
     } catch (error) { console.error(error); } finally { setLoading(false); }
   };
 
   if (!isHydrated) return null;
 
-  const containerStyle: React.CSSProperties = { backgroundColor: '#000', minHeight: '100vh', color: '#fff', padding: '15px', fontFamily: 'sans-serif', opacity: glitch ? 0.4 : 1, transition: 'opacity 0.15s ease' };
-  const cardStyle: React.CSSProperties = { background: '#fff', color: '#000', padding: '24px', boxShadow: '10px 10px 0px #b91c1c', borderRadius: '2px', marginBottom: '25px' };
-  const buttonStyle: React.CSSProperties = { width: '100%', padding: '18px', background: '#b91c1c', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: '900', letterSpacing: '1px', cursor: 'pointer' };
+  // --- REUSABLE COMPONENTS ---
+  const Header = () => (
+    <header style={{ marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div>
+        <h1 style={{ fontSize: '24px', fontWeight: '800', letterSpacing: '-0.025em', margin: 0, color: COLORS.text }}>
+          FABLE<span style={{ color: COLORS.accent }}>FACT</span>
+        </h1>
+        <div style={{ fontSize: '10px', color: COLORS.muted, fontWeight: '500', textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: '4px' }}>
+          Mystery Orchestrator // v1.1
+        </div>
+      </div>
+      <div style={{ padding: '8px', borderRadius: '50%', background: COLORS.card, border: `1px solid ${COLORS.border}` }}>
+        <Fingerprint size={20} color={COLORS.accent} />
+      </div>
+    </header>
+  );
 
-  // --- PLAYER VIEW ---
+  // --- PLAYER VIEW (MOBILE OPTIMIZED) ---
   if (mystery && view === 'player' && activePlayerIndex !== null) {
     const char = mystery.characters[activePlayerIndex];
     return (
-      <div style={{ ...containerStyle, fontFamily: 'monospace' }}>
-        <button onClick={() => { setURLState('gm'); setRevealSecret(false); }} style={{ background: 'transparent', border: 'none', color: '#b91c1c', fontSize: '11px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '30px', cursor: 'pointer' }}>
-          <ArrowLeft size={16} /> EXIT_SESSION
+      <div style={{ backgroundColor: COLORS.bg, minHeight: '100vh', color: COLORS.text, padding: '24px', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+        <button onClick={() => { setURLState('gm'); setRevealSecret(false); }} style={{ background: 'none', border: 'none', color: COLORS.muted, fontSize: '12px', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '32px', cursor: 'pointer', padding: 0 }}>
+          <ArrowLeft size={16} /> BACK TO DASHBOARD
         </button>
-        
-        <div style={{ background: '#0a0a0a', padding: '20px', border: '1px solid #222', borderLeft: '5px solid #b91c1c' }}>
-          <div style={{ fontSize: '9px', fontWeight: 'bold', color: '#b91c1c', letterSpacing: '3px', marginBottom: '15px' }}>// {char.name.toUpperCase()}</div>
-          <h2 style={{ fontSize: '24px', fontWeight: '900', margin: 0 }}>{char.role}</h2>
-          <div style={{ fontSize: '11px', color: '#666', marginBottom: '25px' }}>{char.faction}</div>
 
-          {/* Public Lore (Shared) */}
-          <div style={{ marginBottom: '25px', padding: '12px', background: '#111', borderRadius: '4px' }}>
-            <div style={{ fontSize: '10px', color: '#888', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}><BookOpen size={12} /> PUBLIC INTEL</div>
-            <p style={{ margin: 0, fontSize: '13px', color: '#aaa', fontStyle: 'italic', lineHeight: '1.4' }}>{mystery.publicLore}</p>
+        <div style={{ marginBottom: '32px' }}>
+          <div style={{ color: COLORS.accent, fontSize: '12px', fontWeight: '700', marginBottom: '8px' }}>{char.faction}</div>
+          <h2 style={{ fontSize: '36px', fontWeight: '900', margin: 0, lineHeight: 1 }}>{char.name}</h2>
+          <p style={{ color: COLORS.muted, margin: '8px 0 0 0', fontSize: '16px' }}>{char.role}</p>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div style={{ background: COLORS.card, padding: '20px', borderRadius: '12px', border: `1px solid ${COLORS.border}` }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: COLORS.muted, fontSize: '11px', fontWeight: '700', marginBottom: '12px', textTransform: 'uppercase' }}>
+              <BookOpen size={14} /> World Intel
+            </div>
+            <p style={{ margin: 0, fontSize: '14px', lineHeight: '1.6', color: '#a1a1aa' }}>{mystery.publicLore}</p>
           </div>
 
-          {/* Personal Lore (Specific to Player) */}
-          <div style={{ marginBottom: '25px', padding: '12px', background: '#0f0f1a', border: '1px solid #224', borderRadius: '4px' }}>
-            <div style={{ fontSize: '10px', color: '#55c', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}><UserCheck size={12} /> PRIVATE OBSERVATIONS</div>
-            <p style={{ margin: 0, fontSize: '14px', color: '#ccd', lineHeight: '1.5', fontWeight: '500' }}>{char.personalLore}</p>
+          <div style={{ background: COLORS.card, padding: '20px', borderRadius: '12px', border: `1px solid ${COLORS.border}` }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#818cf8', fontSize: '11px', fontWeight: '700', marginBottom: '12px', textTransform: 'uppercase' }}>
+              <UserCheck size={14} /> Personal Note
+            </div>
+            <p style={{ margin: 0, fontSize: '15px', lineHeight: '1.6', color: '#e4e4e7', fontWeight: '500' }}>{char.personalLore}</p>
           </div>
 
-          <div style={{ marginBottom: '25px', borderTop: '1px solid #222', paddingTop: '20px' }}>
-            <div style={{ fontSize: '10px', color: '#16a34a', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}><Unlock size={12} /> MISSION OBJECTIVE</div>
-            <p style={{ margin: 0, fontSize: '15px', fontWeight: 'bold', color: '#eee' }}>{char.objective}</p>
+          <div style={{ background: COLORS.accent + '15', padding: '20px', borderRadius: '12px', border: `1px solid ${COLORS.accent}40` }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: COLORS.accent, fontSize: '11px', fontWeight: '700', marginBottom: '12px', textTransform: 'uppercase' }}>
+              <Unlock size={14} /> Mission Objective
+            </div>
+            <p style={{ margin: 0, fontSize: '16px', lineHeight: '1.5', fontWeight: '700', color: '#fff' }}>{char.objective}</p>
           </div>
 
-          <div style={{ padding: '20px', background: revealSecret ? '#1a0505' : '#111', border: `1px solid ${revealSecret ? '#b91c1c' : '#222'}` }}>
-            <div style={{ fontSize: '10px', color: '#b91c1c', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '15px' }}><Lock size={12} /> CLASSIFIED SECRET</div>
+          <div style={{ marginTop: '12px' }}>
             {!revealSecret ? (
-              <button onClick={() => setRevealSecret(true)} style={{ ...buttonStyle, padding: '12px' }}>UNSEAL DATA</button>
+              <button 
+                onClick={() => setRevealSecret(true)}
+                style={{ width: '100%', padding: '20px', borderRadius: '12px', background: COLORS.text, color: COLORS.bg, border: 'none', fontWeight: '800', fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+              >
+                <Lock size={18} /> TAP TO REVEAL SECRET
+              </button>
             ) : (
-              <div onClick={() => setRevealSecret(false)}>
-                <p style={{ margin: 0, fontSize: '15px', fontStyle: 'italic', color: '#ffbaba', lineHeight: '1.5' }}>{char.secret}</p>
-                <div style={{ marginTop: '20px', fontSize: '8px', color: '#633', textAlign: 'center' }}>[ TAP TO LOCK ]</div>
+              <div 
+                onClick={() => setRevealSecret(false)}
+                style={{ background: '#450a0a', padding: '24px', borderRadius: '12px', border: `2px solid ${COLORS.accent}`, cursor: 'pointer' }}
+              >
+                <div style={{ fontSize: '11px', color: COLORS.accent, fontWeight: '800', marginBottom: '12px', textTransform: 'uppercase' }}>Classified Secret</div>
+                <p style={{ margin: 0, fontSize: '16px', lineHeight: '1.6', color: '#fecdd3', fontStyle: 'italic' }}>{char.secret}</p>
+                <div style={{ marginTop: '20px', fontSize: '10px', color: '#94a3b8', textAlign: 'center', opacity: 0.5 }}>[ TAP TO HIDE ]</div>
               </div>
             )}
           </div>
@@ -131,38 +145,79 @@ function FableAndFact() {
     );
   }
 
-  // --- GM VIEW ---
+  // --- GM DASHBOARD (MODERN SLEEK) ---
   return (
-    <div style={containerStyle}>
-      <header style={{ borderBottom: '1px solid #333', paddingBottom: '15px', marginBottom: '25px' }}>
-        <div style={{ color: '#b91c1c', fontSize: '10px', fontWeight: 'bold', letterSpacing: '2px', marginBottom: '8px' }}>INTEL OPS // V.10</div>
-        <h1 style={{ fontSize: '42px', fontWeight: '900', margin: 0, fontStyle: 'italic', lineHeight: '0.8' }}>FABLE <span style={{ color: '#b91c1c' }}>FACT</span></h1>
-      </header>
+    <div style={{ backgroundColor: COLORS.bg, minHeight: '100vh', color: COLORS.text, padding: '24px', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+      <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+        <Header />
 
-      {!mystery ? (
-        <div style={{ background: '#111', padding: '20px', border: '1px solid #222' }}>
-          <input style={{ ...buttonStyle, background: '#000', border: '1px solid #333', textAlign: 'left' }} placeholder="Enter theme..." value={theme} onChange={(e) => setTheme(e.target.value)} />
-          <button onClick={handleGenerate} disabled={loading || !theme} style={{ ...buttonStyle, marginTop: '20px' }}>{loading ? 'COMPILING...' : 'INITIALIZE'}</button>
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <div style={cardStyle}>
-            <h2 style={{ fontSize: '22px', fontWeight: '900', borderBottom: '3px solid #000', paddingBottom: '10px', marginBottom: '15px' }}>{mystery.title}</h2>
-            <div style={{ marginBottom: '20px' }}>
-               <h4 style={{ fontSize: '9px', fontWeight: 'bold', color: '#b91c1c', marginBottom: '5px' }}>PUBLIC LORE (EVERYONE KNOWS)</h4>
-               <p style={{ fontSize: '13px', margin: 0, fontStyle: 'italic' }}>{mystery.publicLore}</p>
-            </div>
-            <div style={{ fontSize: '10px', fontWeight: '900', marginBottom: '10px' }}>SUBJECT DIRECTORY</div>
-            {mystery.characters.map((char: any, i: number) => (
-              <div key={i} style={{ background: '#f5f5f5', padding: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <div style={{ fontSize: '14px' }}><b>{char.name}</b><br/><small style={{ color: '#666' }}>{char.role}</small></div>
-                <button onClick={() => setURLState('player', i)} style={{ background: '#000', color: '#fff', border: 'none', padding: '10px', borderRadius: '4px' }}><Smartphone size={16} /></button>
+        {!mystery ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div style={{ background: COLORS.card, padding: '32px', borderRadius: '16px', border: `1px solid ${COLORS.border}` }}>
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: COLORS.muted, marginBottom: '12px', textTransform: 'uppercase' }}>Scenario Motif</label>
+                <input 
+                  style={{ width: '100%', background: COLORS.bg, border: `1px solid ${COLORS.border}`, padding: '16px', color: '#fff', fontSize: '16px', borderRadius: '12px', outline: 'none' }}
+                  placeholder="e.g. Victorian Manor, Cyberpunk heist..."
+                  value={theme}
+                  onChange={(e) => setTheme(e.target.value)}
+                />
               </div>
-            ))}
-            <button onClick={() => { localStorage.removeItem('current_mystery'); setMystery(null); }} style={{ marginTop: '20px', width: '100%', background: '#000', color: '#fff', padding: '10px', fontSize: '10px' }}>SCRAP DATA</button>
+              
+              <div style={{ marginBottom: '32px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                  <label style={{ fontSize: '12px', fontWeight: '700', color: COLORS.muted, textTransform: 'uppercase' }}>Operatives</label>
+                  <span style={{ color: COLORS.accent, fontWeight: '800' }}>{players}</span>
+                </div>
+                <input 
+                  type="range" min="3" max="12" 
+                  style={{ width: '100%', accentColor: COLORS.accent }}
+                  value={players}
+                  onChange={(e) => setPlayers(parseInt(e.target.value))}
+                />
+              </div>
+
+              <button 
+                onClick={handleGenerate}
+                disabled={loading || !theme}
+                style={{ width: '100%', padding: '20px', background: COLORS.accent, color: '#fff', border: 'none', borderRadius: '12px', fontWeight: '800', fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+              >
+                {loading ? <Loader2 className="animate-spin" /> : <Sparkles size={18} />}
+                {loading ? 'COMPILING INTELLIGENCE...' : 'GENERATE MYSTERY'}
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ background: COLORS.card, padding: '24px', borderRadius: '16px', border: `1px solid ${COLORS.border}` }}>
+              <h2 style={{ fontSize: '20px', fontWeight: '800', margin: '0 0 20px 0', color: COLORS.text, borderLeft: `4px solid ${COLORS.accent}`, paddingLeft: '12px' }}>{mystery.title}</h2>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {mystery.characters.map((char: any, i: number) => (
+                  <div 
+                    key={i} 
+                    onClick={() => setURLState('player', i)}
+                    style={{ background: COLORS.bg, border: `1px solid ${COLORS.border}`, padding: '16px', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
+                  >
+                    <div>
+                      <div style={{ fontSize: '14px', fontWeight: '700' }}>{char.name}</div>
+                      <div style={{ fontSize: '11px', color: COLORS.muted, marginTop: '2px' }}>{char.role}</div>
+                    </div>
+                    <ChevronRight size={18} color={COLORS.muted} />
+                  </div>
+                ))}
+              </div>
+
+              <button 
+                onClick={() => { localStorage.removeItem('current_mystery'); setMystery(null); }}
+                style={{ marginTop: '24px', width: '100%', padding: '12px', background: 'transparent', color: COLORS.muted, border: `1px solid ${COLORS.border}`, borderRadius: '8px', fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', cursor: 'pointer' }}
+              >
+                Scrap & Start Over
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
